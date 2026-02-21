@@ -26,64 +26,77 @@
     <a-scene
       mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 2"
       color-space="sRGB"
-      renderer="colorManagement: true, physicallyCorrectLights"
+      renderer="colorManagement: true; physicallyCorrectLights: true"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
     >
+
       <a-assets>
-        <!-- あなたのGLB -->
-        <a-asset-item id="dayModel" src="./day.glb"></a-asset-item>
-        <a-asset-item id="nightModel" src="./night.glb"></a-asset-item>
+        <!-- 昼 -->
+        <a-asset-item id="bg" src="./bg.glb"></a-asset-item>
+        <a-asset-item id="mg" src="./mg.glb"></a-asset-item>
+        <a-asset-item id="fg" src="./fg.glb"></a-asset-item>
+
+        <!-- 夜 -->
+        <a-asset-item id="nbg" src="./night_bg.glb"></a-asset-item>
+        <a-asset-item id="nmg" src="./night_mg.glb"></a-asset-item>
+        <a-asset-item id="nfg" src="./night_fg.glb"></a-asset-item>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- 昼：targets.mind の 1枚目 -->
+      <!-- ===== 昼 ===== -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model id="day" src="#dayModel"></a-gltf-model>
 
-        <script>
-          const setOrder = (obj, order, depthWrite=false) => {
-            obj.traverse((n) => {
-              if (!n.isMesh) return;
-              n.renderOrder = order;
-              if (n.material) {
-                n.material.transparent = true;        // PNG透過なら基本true
-                n.material.depthWrite = depthWrite;   // 透過レイヤーはfalse推奨
-                n.material.depthTest = true;
-                n.material.side = THREE.DoubleSide;   // 裏面も表示
-                n.material.needsUpdate = true;
-              }
-            });
-          };
-
-          document.querySelector('#day').addEventListener('model-loaded', (e) => {
-            const root = e.detail.model;
-
-            // ★ここ：Blender側で付けた名前に合わせて変更してね
-            const FG = root.getObjectByName('FG');
-            const MG = root.getObjectByName('MG');
-            const BG = root.getObjectByName('BG');
-
-            if (BG) setOrder(BG, 1, false);
-            if (MG) setOrder(MG, 2, false);
-            if (FG) setOrder(FG, 3, false);
-
-            console.log("orders set", {FG, MG, BG});
-          });
-        </script>
-      </a-entity>
-
-      <!-- 夜：targets.mind の 2枚目 -->
-      <a-entity mindar-image-target="targetIndex: 1">
-        <a-gltf-model
-          src="#nightModel"
+        <a-gltf-model src="#bg"
           position="0 0 0"
-          rotation="0 0 0"
           scale="1 1 1"
-          material="side: double; transparent: true; depthWrite: false"
-        ></a-gltf-model>
+          render-order="1"
+          material="side: double; transparent: true; depthWrite: false">
+        </a-gltf-model>
+
+        <a-gltf-model src="#mg"
+          position="0 0 0.01"
+          scale="1 1 1"
+          render-order="2"
+          material="side: double; transparent: true; depthWrite: false">
+        </a-gltf-model>
+
+        <a-gltf-model src="#fg"
+          position="0 0 0.02"
+          scale="1 1 1"
+          render-order="3"
+          material="side: double; transparent: true; depthWrite: false">
+        </a-gltf-model>
+
       </a-entity>
+
+      <!-- ===== 夜 ===== -->
+      <a-entity mindar-image-target="targetIndex: 1">
+
+        <a-gltf-model src="#nbg"
+          position="0 0 0"
+          scale="1 1 1"
+          render-order="1"
+          material="side: double; transparent: true; depthWrite: false">
+        </a-gltf-model>
+
+        <a-gltf-model src="#nmg"
+          position="0 0 0.01"
+          scale="1 1 1"
+          render-order="2"
+          material="side: double; transparent: true; depthWrite: false">
+        </a-gltf-model>
+
+        <a-gltf-model src="#nfg"
+          position="0 0 0.02"
+          scale="1 1 1"
+          render-order="3"
+          material="side: double; transparent: true; depthWrite: false">
+        </a-gltf-model>
+
+      </a-entity>
+
     </a-scene>
   </body>
 </html>
