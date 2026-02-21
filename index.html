@@ -2,141 +2,72 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>AR Garden</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AR JP Garden</title>
 
-  <!-- MindAR (Image tracking) -->
+  <!-- Three.js (非モジュール版) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
   <style>
-    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; }
-    #ui {
-      position: fixed; left: 12px; top: 12px; z-index: 10;
-      padding: 10px 12px; border-radius: 10px;
-      background: rgba(0,0,0,0.55); color: #fff; font: 14px/1.4 system-ui, -apple-system, sans-serif;
-      max-width: 80vw;
+    html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;}
+    #ui{
+      position:fixed;left:12px;top:12px;z-index:10;
+      padding:10px;border-radius:12px;
+      background:rgba(0,0,0,.6);color:#fff;font-family:sans-serif;
     }
-    #ui b { display:block; margin-bottom: 4px; }
-    #hint { opacity: 0.9; }
-    #status { margin-top: 6px; opacity: 0.85; }
+    button{
+      margin-top:8px;padding:8px 12px;border-radius:8px;border:none;
+    }
   </style>
 </head>
 
 <body>
   <div id="ui">
-    <b>AR Garden</b>
-    <div id="hint">カメラを許可 → 昼/夜のイラストにかざしてください</div>
-    <div id="status">準備中…</div>
+    <div>開始を押してカメラを許可</div>
+    <button id="start">開始</button>
   </div>
 
-  <script type="module">
-    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js";
-    import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/loaders/GLTFLoader.js";
+<script>
+const startBtn = document.getElementById("start");
 
-    const statusEl = document.getElementById("status");
+startBtn.addEventListener("click", async () => {
 
-    // MindAR setup
-    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-      container: document.body,
-      imageTargetSrc: "./targets.mind",
-      maxTrack: 2, // 2枚を登録してるので2
-    });
+  const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+    container: document.body,
+    imageTargetSrc: "./targets.mind",
+    maxTrack: 2,
+  });
 
-    const { renderer, scene, camera } = mindarThree;
+  const {renderer, scene, camera} = mindarThree;
 
-    // Lighting: 2.5Dなら強いライトは不要。最低限だけ。
-    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+  scene.add(new THREE.AmbientLight(0xffffff, 1));
 
-    // Anchors: コンパイラに入れた順
-    // 0: DAY image, 1: NIGHT image
-    const anchorDay = mindarThree.addAnchor(0);
-    const anchorNight = mindarThree.addAnchor(1);
+  const anchorDay = mindarThree.addAnchor(0);
+  const anchorNight = mindarThree.addAnchor(1);
 
-    const loader = new GLTFLoader();
+  const loader = new THREE.GLTFLoader();
 
-    async function loadGLB(path) {
-      const gltf = await loader.loadAsync(path);
-      const obj = gltf.scene;
+  loader.load("./day.glb", (gltf)=>{
+    anchorDay.group.add(gltf.scene);
+  });
 
-      // 念のため：影や不要な重さを抑える
-      obj.traverse((n) => {
-        if (n.isMesh) {
-          n.frustumCulled = false;
-          // 2.5Dなら影は無しでOK（重くなるので）
-          n.castShadow = false;
-          n.receiveShadow = false;
-          // 透過がある場合、深度書き込みが邪魔ならオフ（必要なら）
-          if (n.material && n.material.transparent) {
-            n.material.depthWrite = false;
-          }
-        }
-      });
+  loader.load("./night.glb", (gltf)=>{
+    anchorNight.group.add(gltf.scene);
+  });
 
-      return obj;
-    }
+  anchorDay.onTargetFound = ()=>{ console.log("DAY"); };
+  anchorNight.onTargetFound = ()=>{ console.log("NIGHT"); };
 
-    function setVisible(group, visible) {
-      group.visible = visible;
-    }
+  await mindarThree.start();
+  renderer.setAnimationLoop(()=>renderer.render(scene,camera));
 
-    // 表示状態（同時に2枚見えるときもあるので安全に管理）
-    const dayGroup = new THREE.Group();
-    const nightGroup = new THREE.Group();
-    anchorDay.group.add(dayGroup);
-    anchorNight.group.add(nightGroup);
+  startBtn.style.display="none";
+});
+</script>
 
-    setVisible(dayGroup, false);
-    setVisible(nightGroup, false);
-
-    statusEl.textContent = "モデル読み込み中…";
-
-    // Load models
-    const dayObj = await loadGLB("./day.glb");
-    const nightObj = await loadGLB("./night.glb");
-
-    // ここでスケールを揃える（まずは1.0で）
-    dayObj.scale.set(1, 1, 1);
-    nightObj.scale.set(1, 1, 1);
-
-    // ※あなたはBlender側で奥行き(Y)を作ってるので、ここは基本0でOK
-    dayObj.position.set(0, 0, 0);
-    nightObj.position.set(0, 0, 0);
-
-    dayGroup.add(dayObj);
-    nightGroup.add(nightObj);
-
-    statusEl.textContent = "起動準備OK（カメラ許可してね）";
-
-    // On target found / lost
-    anchorDay.onTargetFound = () => {
-      setVisible(dayGroup, true);
-      statusEl.textContent = "昼マーカー認識中";
-    };
-    anchorDay.onTargetLost = () => {
-      setVisible(dayGroup, false);
-      statusEl.textContent = "昼マーカー待機中";
-    };
-
-    anchorNight.onTargetFound = () => {
-      setVisible(nightGroup, true);
-      statusEl.textContent = "夜マーカー認識中";
-    };
-    anchorNight.onTargetLost = () => {
-      setVisible(nightGroup, false);
-      statusEl.textContent = "夜マーカー待機中";
-    };
-
-    // Start AR
-    try {
-      await mindarThree.start();
-      statusEl.textContent = "起動しました。イラストにかざしてね";
-      renderer.setAnimationLoop(() => {
-        renderer.render(scene, camera);
-      });
-    } catch (e) {
-      console.error(e);
-      statusEl.textContent = "起動失敗：HTTPS環境・カメラ許可を確認";
-    }
-  </script>
 </body>
 </html>
