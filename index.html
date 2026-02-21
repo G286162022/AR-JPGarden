@@ -1,91 +1,16 @@
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AR JP Garden</title>
-
-    <script src="./libs/three.min.js"></script>
-    <script src="./libs/GLTFLoader.js"></script>
-    <script src="./libs/mindar-image-three.prod.js"></script>
-
-  <style>
-    html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;}
-    #ui{
-      position:fixed;left:12px;top:12px;z-index:10;
-      padding:10px;border-radius:12px;
-      background:rgba(0,0,0,.6);color:#fff;font-family:sans-serif;
-    }
-    button{
-      margin-top:8px;padding:8px 12px;border-radius:8px;border:none;
-    }
-  </style>
-</head>
-
-<body>
-  <div id="ui">
-  <div>開始を押してカメラを許可</div>
-  <button id="start">開始</button>
-</div>
-
-<script>
-const startBtn = document.getElementById("start");
-const ui = document.getElementById("ui");
-
-function setMsg(t){
-  ui.firstElementChild.textContent = t;
-  console.log(t);
-}
-
-startBtn.addEventListener("click", async () => {
-  try {
-    setMsg("起動中…（クリックOK）");
-    startBtn.disabled = true;
-
-    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-      container: document.body,
-      imageTargetSrc: "./targets.mind",
-      maxTrack: 2,
-    });
-
-    const { renderer, scene, camera } = mindarThree;
-
-    setMsg("Three/MindAR 初期化OK → カメラ開始します");
-
-    scene.add(new THREE.AmbientLight(0xffffff, 1));
-
-    const anchorDay = mindarThree.addAnchor(0);
-    const anchorNight = mindarThree.addAnchor(1);
-
-    const loader = new THREE.GLTFLoader();
-
-    loader.load("./day.glb", (gltf) => {
-      anchorDay.group.add(gltf.scene);
-      console.log("day.glb loaded");
-    }, undefined, (e)=>console.error("day.glb error", e));
-
-    loader.load("./night.glb", (gltf) => {
-      anchorNight.group.add(gltf.scene);
-      console.log("night.glb loaded");
-    }, undefined, (e)=>console.error("night.glb error", e));
-
-    anchorDay.onTargetFound = () => setMsg("昼マーカー認識中");
-    anchorDay.onTargetLost  = () => setMsg("昼マーカー待機中");
-    anchorNight.onTargetFound = () => setMsg("夜マーカー認識中");
-    anchorNight.onTargetLost  = () => setMsg("夜マーカー待機中");
-
-    await mindarThree.start(); // ここで許可ダイアログが出るはず
-    setMsg("カメラ起動完了。絵にかざしてね");
-
-    renderer.setAnimationLoop(() => renderer.render(scene, camera));
-    startBtn.style.display = "none";
-  } catch (e) {
-    console.error(e);
-    setMsg("エラー: " + (e && e.message ? e.message : e));
-    startBtn.disabled = false;
-  }
-});
-</script>
-
-</body>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  </head>
+  <body>
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-plane color="blue" opaciy="0.5" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
+      </a-entity>
+    </a-scene>
+  </body>
 </html>
