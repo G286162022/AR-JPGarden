@@ -40,13 +40,38 @@
 
       <!-- 昼：targets.mind の 1枚目 -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model
-          src="#dayModel"
-          position="0 0 0"
-          rotation="0 0 0"
-          scale="1 1 1"
-          material="side: double; transparent: true; depthWrite: false"
-        ></a-gltf-model>
+        <a-gltf-model id="day" src="#dayModel"></a-gltf-model>
+
+        <script>
+          const setOrder = (obj, order, depthWrite=false) => {
+            obj.traverse((n) => {
+              if (!n.isMesh) return;
+              n.renderOrder = order;
+              if (n.material) {
+                n.material.transparent = true;        // PNG透過なら基本true
+                n.material.depthWrite = depthWrite;   // 透過レイヤーはfalse推奨
+                n.material.depthTest = true;
+                n.material.side = THREE.DoubleSide;   // 裏面も表示
+                n.material.needsUpdate = true;
+              }
+            });
+          };
+
+          document.querySelector('#day').addEventListener('model-loaded', (e) => {
+            const root = e.detail.model;
+
+            // ★ここ：Blender側で付けた名前に合わせて変更してね
+            const FG = root.getObjectByName('FG');
+            const MG = root.getObjectByName('MG');
+            const BG = root.getObjectByName('BG');
+
+            if (BG) setOrder(BG, 1, false);
+            if (MG) setOrder(MG, 2, false);
+            if (FG) setOrder(FG, 3, false);
+
+            console.log("orders set", {FG, MG, BG});
+          });
+        </script>
       </a-entity>
 
       <!-- 夜：targets.mind の 2枚目 -->
