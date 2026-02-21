@@ -43,6 +43,9 @@
         <a-asset-item id="nfg" src="./night_fg.glb"></a-asset-item>
       </a-assets>
 
+      <a-light type="ambient" intensity="1.4"></a-light>
+      <a-light type="directional" position="1 1 1" intensity="0.9"></a-light>
+
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <!-- ===== 昼 ===== -->
@@ -56,15 +59,15 @@
         </a-gltf-model>
 
         <a-gltf-model src="#mg"
-          position="0 0 0.01"
-          scale="1 1 1"
+          position="0 0 0.02"
+          scale="1.02 1.02 1.02"
           render-order="2"
           material="side: double; transparent: true; depthWrite: false">
         </a-gltf-model>
 
         <a-gltf-model src="#fg"
-          position="0 0 0.02"
-          scale="1 1 1"
+          position="0 0 0.04"
+          scale="1.04 1.04 1.04"
           render-order="3"
           material="side: double; transparent: true; depthWrite: false">
         </a-gltf-model>
@@ -82,15 +85,15 @@
         </a-gltf-model>
 
         <a-gltf-model src="#nmg"
-          position="0 0 0.01"
-          scale="1 1 1"
+          position="0 0 0.02"
+          scale="1.02 1.02 1.02"
           render-order="2"
           material="side: double; transparent: true; depthWrite: false">
         </a-gltf-model>
 
         <a-gltf-model src="#nfg"
-          position="0 0 0.02"
-          scale="1 1 1"
+          position="0 0 0.04"
+          scale="1.04 1.04 1.04"
           render-order="3"
           material="side: double; transparent: true; depthWrite: false">
         </a-gltf-model>
