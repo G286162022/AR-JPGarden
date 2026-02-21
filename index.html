@@ -27,45 +27,66 @@
 
 <body>
   <div id="ui">
-    <div>開始を押してカメラを許可</div>
-    <button id="start">開始</button>
-  </div>
+  <div>開始を押してカメラを許可</div>
+  <button id="start">開始</button>
+</div>
 
 <script>
 const startBtn = document.getElementById("start");
+const ui = document.getElementById("ui");
+
+function setMsg(t){
+  ui.firstElementChild.textContent = t;
+  console.log(t);
+}
 
 startBtn.addEventListener("click", async () => {
+  try {
+    setMsg("起動中…（クリックOK）");
+    startBtn.disabled = true;
 
-  const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-    container: document.body,
-    imageTargetSrc: "./targets.mind",
-    maxTrack: 2,
-  });
+    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+      container: document.body,
+      imageTargetSrc: "./targets.mind",
+      maxTrack: 2,
+    });
 
-  const {renderer, scene, camera} = mindarThree;
+    const { renderer, scene, camera } = mindarThree;
 
-  scene.add(new THREE.AmbientLight(0xffffff, 1));
+    setMsg("Three/MindAR 初期化OK → カメラ開始します");
 
-  const anchorDay = mindarThree.addAnchor(0);
-  const anchorNight = mindarThree.addAnchor(1);
+    scene.add(new THREE.AmbientLight(0xffffff, 1));
 
-  const loader = new THREE.GLTFLoader();
+    const anchorDay = mindarThree.addAnchor(0);
+    const anchorNight = mindarThree.addAnchor(1);
 
-  loader.load("./day.glb", (gltf)=>{
-    anchorDay.group.add(gltf.scene);
-  });
+    const loader = new THREE.GLTFLoader();
 
-  loader.load("./night.glb", (gltf)=>{
-    anchorNight.group.add(gltf.scene);
-  });
+    loader.load("./day.glb", (gltf) => {
+      anchorDay.group.add(gltf.scene);
+      console.log("day.glb loaded");
+    }, undefined, (e)=>console.error("day.glb error", e));
 
-  anchorDay.onTargetFound = ()=>{ console.log("DAY"); };
-  anchorNight.onTargetFound = ()=>{ console.log("NIGHT"); };
+    loader.load("./night.glb", (gltf) => {
+      anchorNight.group.add(gltf.scene);
+      console.log("night.glb loaded");
+    }, undefined, (e)=>console.error("night.glb error", e));
 
-  await mindarThree.start();
-  renderer.setAnimationLoop(()=>renderer.render(scene,camera));
+    anchorDay.onTargetFound = () => setMsg("昼マーカー認識中");
+    anchorDay.onTargetLost  = () => setMsg("昼マーカー待機中");
+    anchorNight.onTargetFound = () => setMsg("夜マーカー認識中");
+    anchorNight.onTargetLost  = () => setMsg("夜マーカー待機中");
 
-  startBtn.style.display="none";
+    await mindarThree.start(); // ここで許可ダイアログが出るはず
+    setMsg("カメラ起動完了。絵にかざしてね");
+
+    renderer.setAnimationLoop(() => renderer.render(scene, camera));
+    startBtn.style.display = "none";
+  } catch (e) {
+    console.error(e);
+    setMsg("エラー: " + (e && e.message ? e.message : e));
+    startBtn.disabled = false;
+  }
 });
 </script>
 
