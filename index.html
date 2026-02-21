@@ -21,7 +21,7 @@
   </head>
 
   <body>
-    <div id="hint">カメラ許可 → 昼/夜イラストにかざしてください</div>
+    <!--<div id="hint">カメラ許可 → 昼/夜イラストにかざしてください</div>-->
 
     <a-scene
       mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 2"
@@ -45,6 +45,7 @@
           position="0 0 0"
           rotation="0 0 0"
           scale="1 1 1"
+          material="side: double; transparent: true; depthWrite: false"
         ></a-gltf-model>
       </a-entity>
 
@@ -55,6 +56,7 @@
           position="0 0 0"
           rotation="0 0 0"
           scale="1 1 1"
+          material="side: double; transparent: true; depthWrite: false"
         ></a-gltf-model>
       </a-entity>
     </a-scene>
